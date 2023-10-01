@@ -11,8 +11,15 @@
 		<!-- Hibernate Properties -->
 		<property name="dialect">org.hibernate.dialect.MySQL8Dialect</property>
 		<property name="show_sql">true</property>			
-				
+		<property name="hbm2ddl.auto">update</property>
+		<property name="hibernate.cache.use_second_level_cache">true</property>
+		<property name="cache.provider_class">org.hibernate.cache.EhCacheProvider</property>
+		<property name="hibernate.cache.region.factory_class">org.hibernate.cache.ehcache.EhCacheRegionFactory</property>		
+			
 		<!-- Mapping Resources -->
+		<mapping class="co.edureka.hibernate.entity.Product"/>
+		<mapping class="co.edureka.hibernate.entity.Faculty"/>
+		<mapping class="co.edureka.hibernate.entity.Batch"/>
 		<mapping resource="student.hbm.xml"/>
 		
 	</session-factory>
