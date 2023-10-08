@@ -1,0 +1,594 @@
+Using Jersey-2 in Eclipse
+=========================
+- intergrate Tomcat Server with Eclipse
+
+1) Create a Maven Project in Eclipse
+File > New > Maven Project
+  > Next
+  > Select "org.apache.maven.archetypes"  maven-archetype-webapp
+  > Next
+     Group Id	 : co.edureka
+     Artifact Id : rest-app
+  > Finish
+
+2) Integrate the Application with Tomcat Server
+
+Right Click on Project > Properties > Targeted Runtime > Check Apache Tomcat from List (or) Integrate a New Runtime Environment
+
+3) if pom.xml shows error add the following inside <build> of pom.xml
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>3.3.1</version>
+			</plugin>
+		</plugins>
+
+4) Change the JRE System Library of the Project, using the "Build Path" option to "Workspace Default JRE"
+    
+in pom.xml
+	<properties>
+		<maven.compiler.source>17</maven.compiler.source>
+		<maven.compiler.target>17</maven.compiler.target>
+	</properties>
+
+--> Right Click on Project > Maven > Update Project > Select "Force Update ..." > OK
+--> Clean and Refresh the Project  Project (menu) > Clean..
+
+
+Right Click on Project > Properties > Project Facets --> make "Dynamic Web Module" version to 5.0
+If required - Remove M2E - Maven Integration for Eclipse . Help(menu) > About Eclipse IDE > Instalation Details 
+
+in web.xml
+<web-app xmlns="https://jakarta.ee/xml/ns/jakartaee"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="https://jakarta.ee/xml/ns/jakartaee
+                      https://jakarta.ee/xml/ns/jakartaee/web-app_6_0.xsd" version="6.0">
+
+
+5) In pom.xml - add the additional dependencies for Jersey 3.x
+
+mvnrepository.com > Search for "Jersey Container Servlet" &  "jersey-hk2"
+
+<dependency>
+    <groupId>org.glassfish.jersey.containers</groupId>
+    <artifactId>jersey-container-servlet</artifactId>
+    <version>3.1.3</version>
+</dependency>
+
+<dependency>
+    <groupId>org.glassfish.jersey.inject</groupId>
+    <artifactId>jersey-hk2</artifactId>
+    <version>3.1.3</version>
+</dependency>
+
+
+<dependencies>
+<dependency>
+    <groupId>org.glassfish.jersey.containers</groupId>
+    <artifactId>jersey-container-servlet</artifactId>
+    <version>2.40</version>
+</dependency>
+<dependency>
+    <groupId>org.glassfish.jersey.inject</groupId>
+    <artifactId>jersey-hk2</artifactId>
+    <version>2.40</version>
+</dependency>
+</dependencies>
+
+
+
+6) src/main/webapp/WEB-INF/web.xml
+<web-app>
+<servlet>  
+  <servlet-name>jersey</servlet-name>  
+  <servlet-class>org.glassfish.jersey.servlet.ServletContainer</servlet-class>  
+   <init-param>  
+    <param-name>jersey.config.server.provider.packages</param-name>  
+    <param-value>co.edureka.services</param-value>  
+   </init-param>  
+   <load-on-startup>1</load-on-startup>  
+ </servlet>  
+
+ <servlet-mapping>  
+   <servlet-name>jersey</servlet-name>  
+   <url-pattern>/rest/*</url-pattern>  
+ </servlet-mapping>  
+</web-app>
+
+
+7) Create a Package with name : co.edureka.services
+	
+8) Create a Java class in co.edureka.services package with name : EdurekaServices
+EdurekaServices.java
+
+package co.edureka.services;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
+@Path("/edureka")
+public class EdurekaServices {
+	@GET
+	@Produces("text/plain")
+	public String indiaService() {
+		return "India Customer Service Center";
+	}
+	
+	@GET
+	@Produces("text/html")
+	@Path("/intl")
+	public String internationalService() {
+		return "<h2>International Customer Service Center</h2>";
+	}	
+}
+
+
+9) index.jsp
+
+<html>
+<head>
+<style>
+#wrapper{
+  width:70%;
+  margin:100px auto;
+  padding:20px;
+  box-shadow:0 0 10px black;
+  text-align:center;
+  border-radius:20px;
+}
+a:link, a:visited {
+    background:linear-gradient(45deg,black 50%, orangered 50%);
+    color: white;
+    text-decoration: none;
+    font-size: 18px;
+    display:inline-block;
+    width:220px;
+    padding:10px;
+    border-radius:15px;
+    margin-right:40px;
+}
+
+a:hover {
+    box-shadow:0 0 10px black;
+    background:linear-gradient(45deg,darkblue 50%, darkred 50%);
+}
+</style>
+</head>
+<body>
+	<div id="wrapper">
+		<a href="rest/edureka">India Service</a> 
+		<a href="rest/edureka/intl">International Service</a>
+	</div>
+</body>
+</html>
+
+
+10) Run As > Run on Server
+
+11) http://localhost:8080/rest-app/rest/edureka
+   http://localhost:8080/rest-app/rest/edureka/intl
+
+*****************************************************************
+
+Sending Data from the Consumer Application to Provider Application
+
+@QueryParam Annotation
+======================
+
+In RESTful web services (JAX-RS) @QueryParam annotation will be used to get the query parameters from the URL, 
+
+http://localhost:8080/rest-app/rest/cibil/score?name=Sunil&pan=AAFPY7845G
+
+package co.edureka.services;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+
+@Path("/cibil")
+public class CibilRestController {
+	@GET
+	@Produces("text/plain")
+	@Path("/score")
+	public String getCibilScore(@QueryParam("name") String name, @QueryParam("pan") String pan) {
+		String responseText ="";
+		if(pan.length() == 10) {
+			//logic to get the score from DB
+			responseText = "Hi "+name+", your PAN is "+pan.toUpperCase()+", and your Cibil Score is 803";
+		}
+		else {
+			responseText = "Hi "+name+", please submit a correct PAN number";
+		}
+		
+		return responseText;
+	}
+}
+
+============================================================================================
+
+@PathParam Annotation
+---------------------
+
+In RESTful (JAX-RS) web services @PathParam annotation will be used to bind RESTful URL parameter values to the method arguments.
+
+http://localhost:8080/rest-app/rest/personal/age/sunil/1987
+
+package co.edureka.services;
+
+import java.util.Calendar;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+
+@Path("/personal")
+public class PersonalRestController {
+	@GET
+	@Produces("text/plain")
+	@Path("/age/{name}/{yob}")
+	public String calculateAge(@PathParam("name") String name, @PathParam("yob") Integer yob)
+	{
+		if(isValidYoB(yob)) {
+			int age = getAge(yob);
+			return "Hello "+name+", you are "+age+ " years of age!!";
+		}else {
+			return "Hello "+name+", your Year of Birth is NOT Valid";
+		}
+	}
+
+	private boolean isValidYoB(Integer yob) {
+		Calendar calendar = Calendar.getInstance();
+		int current_year = calendar.get(Calendar.YEAR);
+		return (yob < current_year)?true:false;
+	}
+	
+	private int getAge(int yob) {
+		Calendar calendar = Calendar.getInstance();
+		int current_year = calendar.get(Calendar.YEAR);
+		return current_year-yob;
+	}
+}
+
+Right click on your project > Run As > Run on Server
+
+http://localhost:65535/REST/rest/personal/age/Sunil/1985
+
+******************************************************
+
+
+@FormParam Annotation
+=====================
+By using @FormParam annotation, RESTful web service would accept HTML form parameters sent by the client in the POST request and bind them to the method variables. Generally @FormParam will come into picture when client send the data in POST request, if it is the GET request @QueryParam would be the best choice.
+
+
+1) Registration Page - registration.html
+
+<html>
+<head>
+<title>edureka | student registration</title>
+<style>
+table {
+	width: 450px;
+	margin: 100px auto;
+	padding: 10px;
+	background: linear-gradient(45deg, black 50%, orangered 50%);
+	border-radius: 15px;
+	box-shadow: 0 0 10px black;
+	color: white;
+	font-size: 20px;
+}
+
+input {
+	font-size: 20px;
+	display:block;
+}
+
+tr {
+	height: 45px;
+}
+</style>
+</head>
+<body>
+    <form action="rest/edureka/register" method="post">
+	<table>
+	<caption style="color:black;margin:10px;">Student | Registration</caption>
+		<tr>
+			<td>Name</td>
+			<td><input type="text" size=20 autofocus required name="name_field"></td>
+		</tr>
+
+		<tr>
+			<td>Age</td>
+			<td><input type="text" name="age_field" size=20></td>			
+		</tr>
+
+		<tr>
+			<td>Address</td>
+			<td><input type="text" name="addr_field" size=20></span></td>
+		</tr>
+		
+		<tr>
+		  <td colspan=2 align=center>
+		  <input type="submit" value="R E G I S T E R">
+		  </td>
+		</tr>
+	</table>
+	</form>
+</body>
+</html>
+
+2) Create a New Java class in co.edureka package : Registration
+Registration.java
+
+package co.edureka.services;
+
+import javax.ws.rs.FormParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+
+import co.edureka.bindings.Student;
+
+@Path("/edureka")
+public class StudentRegistrationRestController {
+	/*
+	@POST
+	@Produces("text/html")
+	@Path("/register")
+	public String registerNewStudent(@FormParam("name_field") String name, @FormParam("age_field") Integer age, 
+										@FormParam("addr_field") String address) 	{
+		//--logic to save the student to database
+		String response = "<p style=font-size:20px;line-height:2>";
+		response += "Name - "+name+"<br>";
+		response += "Age - "+age+"<br>";
+		response += "Address - "+address+"</p>";
+		
+		return response;
+	}
+	*/
+	
+	@POST
+	@Produces("application/json")
+	@Path("/register")
+	public Student registerNewStudent(@FormParam("name_field") String name, @FormParam("age_field") Integer age,@FormParam("addr_field") String address) 	{
+		//--logic to save the student to database
+		Student student = new Student();
+		
+		student.setStudentName(name);
+		student.setStudentAge(age);
+		student.setStudentAddress(address);
+		
+		return student;
+	}
+}
+
+<dependency>
+    <groupId>org.glassfish.jersey.media</groupId>
+    <artifactId>jersey-media-json-jackson</artifactId>
+    <version>3.1.3</version>
+</dependency>
+
+
+		<dependency>
+			<groupId>org.glassfish.jersey.media</groupId>
+			<artifactId>jersey-media-json-jackson</artifactId>
+			<version>2.40</version>
+		</dependency>
+
+
+---------------------------------------------------------
+Tomcat 10.x
+
+a) change the parameters properly in web.xml as follows 
+  <param-name>jersey.config.server.provider.packages</param-name>
+  <param-value>co.edureka.services</param-value> 
+
+b) add the following dependencies
+
+jakarta.platform
+jakarta.jakartaee-web-api
+10.0.0
+provided
+
+
+<dependency>
+    <groupId>org.glassfish.jersey.containers</groupId>
+    <artifactId>jersey-container-servlet</artifactId>
+    <version>3.1.2</version>
+</dependency>
+
+<dependency>
+    <groupId>org.glassfish.jersey.inject</groupId>
+    <artifactId>jersey-hk2</artifactId>
+    <version>3.1.2</version>
+</dependency>
+
+
+org.glassfish.jersey.containers
+jersey-container-servlet
+3.1.2
+
+org.glassfish.jersey.inject
+jersey-hk2
+3.1.2
+
+org.glassfish.jersey.media
+jersey-media-json-jackson
+3.1.2
+
+----------------------------------------------------------
+Consumer Application using Maven
+================================
+1) Create a Simple Maven project for Consumer.
+Artifact ID: Consumer
+
+2) Add the following dependencies 
+<dependencies>
+  <dependency>
+    <groupId>org.glassfish.jersey.core</groupId>
+    <artifactId>jersey-client</artifactId>
+    <version>2.39</version>
+  </dependency>
+  <dependency>
+    <groupId>org.glassfish.jersey.inject</groupId>
+    <artifactId>jersey-hk2</artifactId>
+    <version>2.39</version>
+  </dependency>
+  <dependency>
+    <groupId>javax.activation</groupId>
+    <artifactId>activation</artifactId>
+    <version>1.1.1</version>
+  </dependency>
+</dependencies>
+
+
+3) Create Client Test class.
+ClientTest.java
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+public class ClientTest 
+{
+  public static void main(String[] args) 
+  {
+    String baseURL = "http://localhost:65535/rest-app";
+
+    // 1. Create on empty Client object
+    Client client = ClientBuilder.newClient();		
+		
+    // 2. add url to Client, get WebTarget
+    WebTarget webTarget = client.target(baseURL);
+		
+   // 3. make request call to a resource
+   Invocation.Builder invocationBuilder =  webTarget.path("/rest/edureka/intl").request(MediaType.TEXT_HTML);
+   Response response = invocationBuilder.get();		
+		
+   // 4. read entity from response object
+   String resp = response.readEntity(String.class);
+		
+   // 5. print response
+   System.out.println(resp);
+		
+   // 6. print extra details
+   System.out.println(response.getStatus());
+   System.out.println(response.getStatusInfo());
+
+  System.out.println();
+  String str = webTarget.path("rest").path("edureka/international").request().accept(MediaType.TEXT_HTML).get(String.class);
+  System.out.println(str);
+ }
+}
+
+----------------------------------------------------------
+Sending JSON Response from Provider to Consumer
+
+1) Add the additional dependency in pom.xml
+<dependency>
+  <groupId>org.glassfish.jersey.media</groupId>
+  <artifactId>jersey-media-json-jackson</artifactId>
+  <version>2.38</version>
+</dependency>
+
+2) Create a class - Employee
+
+package co.edureka.bindings;
+
+import java.io.Serializable;
+public class Employee implements Serializable
+{
+  int empno;
+  String name;
+
+  public Employee(int empno, String name) {
+   this.empno = empno;
+   this.name = name;
+  }
+  //define getters and setters	
+}
+
+
+@GET
+@Path("/employees")
+@Produces("application/json")
+public List<Employee> getAllEmployees() 
+{
+   ArrayList<Employee> employeesList = new ArrayList<Employee>();
+    	     
+   employeesList.add(new Employee(101, "Sunil Joseph"));
+   employeesList.add(new Employee(201, "Anirudh"));
+   employeesList.add(new Employee(301, "Jefferey"));	     
+	    
+   return employeesList;
+}
+
+	OR
+
+@GET
+@Path("/employees")
+@Produces(MediaType.APPLICATION_JSON)
+public Response getAllEmployees() 
+{
+    ArrayList<Employee> employeesList = new ArrayList<Employee>();
+	    	     
+    employeesList.add(new Employee(101, "Sunil Joseph"));
+    employeesList.add(new Employee(201, "Anirudh"));
+    employeesList.add(new Employee(301, "Jefferey"));
+	     
+    GenericEntity<List<Employee>> myEntity = new GenericEntity<List<Employee>>(employeesList) {};
+
+    return Response.status(200).entity(myEntity).build();
+}
+
+
+//We send a response containing the JSON data to the client. A message body writer transforms the list of Employees into JSON
+
+
+  Sending JSON Request
+    @POST
+    @Consumes("application/json")
+    @Produces("text/html")
+    @Path("/posting")
+    public String postMessage(Employee emp) throws Exception{        
+        System.out.println("Emp ID = "+emp.getEmpno());
+        System.out.println("Emp Name  = "+emp.getName());
+        
+        return "received employee details";
+    }	
+---------------------------------------------------------
+Client Program
+
+import java.net.URI;  
+import javax.ws.rs.client.Client;  
+import javax.ws.rs.client.ClientBuilder;  
+import javax.ws.rs.client.WebTarget;  
+import javax.ws.rs.core.MediaType;  
+import javax.ws.rs.core.UriBuilder;  
+import org.glassfish.jersey.client.ClientConfig; 
+
+public class ClientTest1
+{  
+public static void main(String[] args) throws Exception
+{  
+ ClientConfig config=new ClientConfig();  
+ Client client=ClientBuilder.newClient(config);  
+
+ URI baseURI=UriBuilder.fromUri("http://localhost:65535/REST2").build();
+
+ WebTarget target=client.target(baseURI);  
+
+ System.out.println(target.path("rest").path("edureka").path("Sunil").path("Java").request().accept(MediaType.TEXT_HTML).get(String.class));
+
+ System.out.println(target.path("rest").path("edureka").queryParam("name","Joseph").queryParam("course","Android").request().accept(MediaType.TEXT_HTML).get(String.class));
+
+ System.out.println(target.path("rest").path("edureka").path("nri").request().accept(MediaType.TEXT_HTML).get(String.class));  
+}  
+}  
